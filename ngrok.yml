@@ -1,0 +1,6 @@
+version: 2
+authtoken: 2RVZ3qBtrzQor5aYVNoxfeplnsz_5PSUPeZqVnnBtSY8Ly4Mu
+tunnels:
+  web:
+    addr: 192.168.232.208:8080
+    proto: http

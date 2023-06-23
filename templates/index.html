@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Notes</title>
+</head>
+<body>
+    <h1>Notes</h1>
+    <form action="/add" method="post">
+        <input type="text" name="content" placeholder="Enter note">
+        <button type="submit">Save</button>
+    </form>
+    <ul>
+        {% for note in notes %}
+            <li>
+                {{ note.content }}
+                <form action="/delete/{{ note.id }}" method="post" style="display: inline;">
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

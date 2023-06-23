@@ -1,0 +1,77 @@
+
+version: '3'
+services:
+  postgres:
+    container_name: postgres
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=mydatabase
+  app:
+    container_name: notizapp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    volumes:
+      - ./app.py:/app/app.py  
+      - ./templates:/app/templates  
+    depends_on:
+      - postgres
+    restart: on-failure      
+  postgres_exporter:
+    container_name: postgres_exporter
+    image: wrouesnel/postgres_exporter
+    ports:
+      - 9187:9187
+    environment:
+      - DATA_SOURCE_NAME=postgresql://myuser:mypassword@192.168.232.208:5432/mydatabase
+    depends_on:
+      - postgres
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    
+
+    restart: always
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana:/var/lib/grafana
+      - ./datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./dashboard.json:/etc/grafana/provisioning/dashboards/dashboard.json
+      - ./dashboard.json:/etc/grafana/dashboards/dashboard.json
+    user: "root:root"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=password
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    command: sh ./import_dashboard.sh
+    ngrok:
+        image: ngrok/ngrok:latest
+        restart: unless-stopped
+        command:
+          - "start"
+          - "--all"
+          - "--config"
+          - "/etc/ngrok.yml"
+        volumes:
+          - ./ngrok.yml:/etc/ngrok.yml
+        ports:
+          - 4040:4040
